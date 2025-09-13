@@ -1,6 +1,7 @@
 "use server";
 
 import { auth, db } from "@/firebase/admin";
+import { FirebaseError } from "firebase/app";
 
 import { cookies } from "next/headers";
 
@@ -27,15 +28,21 @@ export async function signUp(params: SignUpParams) {
       success: true,
       message: "Account created successfully. Please sign in.",
     };
-  } catch (e: any) {
-    console.log("Error creating a user", e);
+  } catch (error) {
+    // No need for a type annotation here
+    console.log("Error creating a user", error);
 
-    if (e.code === "auth/email-already-exists") {
+    // This is the type guard
+    if (
+      error instanceof FirebaseError &&
+      error.code === "auth/email-already-exists"
+    ) {
       return {
         success: false,
         message: "This email is already in use.",
       };
     }
+
     return {
       success: false,
       message: "Failed to create an account",
@@ -115,37 +122,4 @@ export async function getCurrentUser(): Promise<User | null> {
 export async function isAuthenticated() {
   const user = await getCurrentUser();
   return !!user;
-}
-
-export async function getInterviewsByUserId(
-  userId: string
-): Promise<Interview[] | null> {
-  const interviews = await db
-    .collection("interviews")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
-    .get();
-
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
-}
-
-export async function getLatestInterviews(
-  params: GetLatestInterviewsParams
-): Promise<Interview[] | null> {
-  const { userId, limit = 20 } = params;
-  const interviews = await db
-    .collection("interviews")
-    .orderBy("createdAt", "desc")
-    .where("finalized", "==", true)
-    .where("userId", "!=", userId)
-    .limit(limit)
-    .get();
-
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
 }
