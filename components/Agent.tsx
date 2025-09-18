@@ -127,7 +127,10 @@ const Agent = ({
           userid: userId,
         },
       });
-    } else {
+    } else if (
+      type !== "generate" &&
+      process.env.NEXT_PUBLIC_VAPI_ENABLED === "true"
+    ) {
       let formattedQuestions = "";
       if (questions) {
         formattedQuestions = questions
