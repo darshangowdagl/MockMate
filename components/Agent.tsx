@@ -117,7 +117,10 @@ const Agent = ({
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
+    if (
+      type === "generate" &&
+      process.env.NEXT_PUBLIC_VAPI_ENABLED === "true"
+    ) {
       await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
         variableValues: {
           username: userName,
